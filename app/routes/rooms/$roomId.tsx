@@ -1,53 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoaderFunction, useLoaderData } from "remix";
+import { EstimateButton } from "~/components/EstimateButton";
+import { PlayerEstimate } from "~/components/PlayerEstimate";
+import { getUserId } from "~/utls/user";
 
 export const loader: LoaderFunction = async ({ params }) => {
   return { roomId: params.roomId };
 };
 
-function EstimateButton({
-  estimate,
-  onClick,
-}: {
-  estimate: number;
-  onClick: (estimate: number) => void;
-}) {
-  return (
-    <button
-      style={{ cursor: "pointer", height: "40px", width: "50px" }}
-      type="button"
-      onClick={() => {
-        onClick(estimate);
-      }}
-    >
-      {estimate}
-    </button>
-  );
+interface Player {
+  id: string;
+  roomId: string;
+  estimate: number | null;
 }
 
-function PlayerEstimate({
-  isHidden,
-  estimate,
-}: {
+interface Message {
+  userId: string;
+  roomId: string;
   isHidden: boolean;
   estimate: number | null;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        border: "1px solid black",
-        height: "40px",
-        width: "50px",
-        borderRadius: "5px",
-      }}
-    >
-      {estimate && isHidden && <span>X</span>}
-      {estimate && !isHidden && <span>{estimate}</span>}
-    </div>
-  );
+  reset?: boolean;
+  playerLeft?: boolean;
 }
 
 const ESTIMATE_OPTIONS = [1, 2, 3, 5, 8];
@@ -56,11 +29,170 @@ export default function Room() {
   const { roomId } = useLoaderData();
   const [estimate, setEstimate] = useState<number | null>(null);
   const [isHidden, setIsHidden] = useState(true);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [latestMessage, setLatestMessage] = useState<Message | null>(null);
+  const [socket, setSocket] = useState<WebSocket>();
+
+  useEffect(() => {
+    instantiateWebSocket();
+  }, []);
+
+  useEffect(() => {
+    processNewMessage();
+  }, [latestMessage]);
+
+  const instantiateWebSocket = () => {
+    const userId = getUserId();
+    // TODO: make this dynamic
+    const socket = new WebSocket("ws://localhost:1234");
+
+    socket.onopen = () => {
+      const message = JSON.stringify({
+        userId,
+        roomId,
+        estimate: null,
+        isHidden: true,
+      });
+      socket.send(message);
+    };
+
+    socket.onerror = (error) => {
+      console.error("Websocket error", error);
+    };
+
+    socket.onmessage = (message) => {
+      const data = JSON.parse(message.data);
+
+      setLatestMessage(data);
+    };
+
+    window.addEventListener("beforeunload", () => {
+      const message = JSON.stringify({
+        userId,
+        roomId,
+        playerLeft: true,
+      });
+      socket.send(message);
+    });
+
+    setSocket(socket);
+  };
+
+  const processNewMessage = () => {
+    const userId = getUserId();
+
+    if (
+      !latestMessage ||
+      roomId !== latestMessage.roomId ||
+      latestMessage.userId === userId
+    ) {
+      return;
+    }
+
+    if (latestMessage.isHidden === false) {
+      setIsHidden(false);
+    }
+    if (!!latestMessage.reset) {
+      resetState();
+    }
+
+    const existingPlayer = players.find(
+      (player) => player.id === latestMessage.userId
+    );
+
+    if (!existingPlayer) {
+      addPlayer({
+        id: latestMessage.userId,
+        roomId: latestMessage.roomId,
+        estimate: latestMessage.estimate,
+      });
+
+      return;
+    }
+
+    if (latestMessage.playerLeft) {
+      removePlayer(latestMessage.userId);
+    }
+
+    if (!!latestMessage.estimate) {
+      updatePlayerEstimate(existingPlayer, latestMessage.estimate);
+    }
+  };
+
+  const addPlayer = (player: Player) => {
+    setPlayers((players) => [...players, player]);
+
+    // let the new player know that you're here
+    const userId = getUserId();
+    const message = JSON.stringify({ userId, roomId, estimate, isHidden });
+    socket?.send(message);
+  };
+
+  const removePlayer = (playerId: string) => {
+    console.log(`Player ${playerId} left`);
+
+    setPlayers((players) => {
+      return [...players].filter((player) => player.id !== playerId);
+    });
+  };
+
+  const updatePlayerEstimate = (player: Player, newEstimate: number) => {
+    console.log(`Player ${player.id} voted ${newEstimate}`);
+
+    setPlayers((players) => {
+      const index = players.indexOf(player);
+      const newPlayers = [...players];
+      newPlayers[index].estimate = newEstimate;
+
+      return newPlayers;
+    });
+  };
+
+  const handleEstimateClick = (estimate: number) => {
+    setEstimate(estimate);
+
+    const userId = getUserId();
+    const message = JSON.stringify({ userId, roomId, estimate, isHidden });
+    socket?.send(message);
+  };
+
+  const handleRevealClick = () => {
+    setIsHidden(false);
+
+    const userId = getUserId();
+    const message = JSON.stringify({
+      userId,
+      roomId,
+      estimate,
+      isHidden: false,
+    });
+    socket?.send(message);
+  };
+
+  const handleResetClick = () => {
+    resetState();
+
+    const userId = getUserId();
+    const message = JSON.stringify({
+      userId,
+      roomId,
+      estimate: null,
+      isHidden: true,
+      reset: true,
+    });
+    socket?.send(message);
+  };
+
+  const resetState = () => {
+    setEstimate(null);
+    setIsHidden(true);
+    setPlayers((players) => {
+      return [...players].map((player) => ({ ...player, estimate: null }));
+    });
+  };
 
   return (
     <div>
-      <p>{roomId}</p>
-
       <div
         style={{
           display: "flex",
@@ -69,8 +201,13 @@ export default function Room() {
           marginBottom: "2rem",
         }}
       >
-        {ESTIMATE_OPTIONS.map((estimate) => (
-          <EstimateButton estimate={estimate} onClick={setEstimate} />
+        {ESTIMATE_OPTIONS.map((estimate, i) => (
+          <EstimateButton
+            key={i}
+            disabled={!isHidden}
+            estimate={estimate}
+            onClick={handleEstimateClick}
+          />
         ))}
       </div>
 
@@ -83,13 +220,20 @@ export default function Room() {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
           flexWrap: "wrap",
+          gap: "1rem",
           marginBottom: "2rem",
         }}
       >
-        {/* TODO: map over all players */}
         <PlayerEstimate {...{ estimate, isHidden }} />
+
+        {players.map((player) => (
+          <PlayerEstimate
+            key={player.id}
+            estimate={player.estimate}
+            {...{ isHidden }}
+          />
+        ))}
       </div>
 
       <div
@@ -100,7 +244,7 @@ export default function Room() {
       >
         <button
           style={{ height: "40px", width: "75px", cursor: "pointer" }}
-          onClick={() => setEstimate(null)}
+          onClick={handleResetClick}
         >
           Reset
         </button>
@@ -111,7 +255,7 @@ export default function Room() {
             cursor: "pointer",
             marginLeft: "1rem",
           }}
-          onClick={() => setIsHidden(false)}
+          onClick={handleRevealClick}
         >
           Reveal
         </button>
