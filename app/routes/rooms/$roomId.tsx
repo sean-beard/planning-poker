@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LoaderFunction, useLoaderData } from "remix";
 import { EstimateButton } from "~/components/EstimateButton";
 import { PlayerEstimate } from "~/components/PlayerEstimate";
@@ -35,6 +35,11 @@ export default function Room() {
   const [latestMessage, setLatestMessage] = useState<Message | null>(null);
   const [socket, setSocket] = useState<WebSocket>();
 
+  const atLeastOneEstimate = useMemo(
+    () => !!estimate || players.some((player) => !!player.estimate),
+    [estimate, players]
+  );
+
   useEffect(() => {
     instantiateWebSocket();
   }, []);
@@ -45,7 +50,6 @@ export default function Room() {
 
   const instantiateWebSocket = () => {
     const userId = getUserId();
-    const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(location.origin.replace(/^http/, "ws"));
 
     socket.onopen = () => {
@@ -122,6 +126,8 @@ export default function Room() {
   };
 
   const addPlayer = (player: Player) => {
+    console.log(`Player ${player.id} joined`);
+
     setPlayers((players) => [...players, player]);
 
     // let the new player know that you're here
@@ -139,8 +145,6 @@ export default function Room() {
   };
 
   const updatePlayerEstimate = (player: Player, newEstimate: number) => {
-    console.log(`Player ${player.id} voted ${newEstimate}`);
-
     setPlayers((players) => {
       const index = players.indexOf(player);
       const newPlayers = [...players];
@@ -205,7 +209,7 @@ export default function Room() {
       >
         {ESTIMATE_OPTIONS.map((estimate, i) => (
           <EstimateButton
-            key={i}
+            key={estimate}
             disabled={!isHidden}
             estimate={estimate}
             onClick={handleEstimateClick}
@@ -227,7 +231,13 @@ export default function Room() {
           marginBottom: "2rem",
         }}
       >
-        <PlayerEstimate {...{ estimate, isHidden }} />
+        <PlayerEstimate
+          {...{ estimate, isHidden }}
+          style={{
+            color: "white",
+            backgroundColor: `rgb(8, 126, 168, ${estimate ? 1 : 0.2})`,
+          }}
+        />
 
         {players.map((player) => (
           <PlayerEstimate
@@ -251,10 +261,11 @@ export default function Room() {
           Reset
         </button>
         <button
+          disabled={!isHidden || !atLeastOneEstimate}
           style={{
             height: "40px",
             width: "75px",
-            cursor: "pointer",
+            cursor: isHidden && atLeastOneEstimate ? "pointer" : "not-allowed",
             marginLeft: "1rem",
           }}
           onClick={handleRevealClick}

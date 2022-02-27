@@ -1,4 +1,5 @@
 import {
+  Link,
   Links,
   LiveReload,
   Meta,
@@ -30,7 +31,15 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body style={{ margin: 0, padding: "1.5rem 1.5rem" }}>
+        <h1 style={{ margin: "0 0 2rem 0" }}>
+          <Link
+            to="/"
+            style={{ textDecoration: "none", color: "rgb(8, 126, 168)" }}
+          >
+            EP Planning Poker
+          </Link>
+        </h1>
         <Outlet />
         <ScrollRestoration />
         <Scripts />
