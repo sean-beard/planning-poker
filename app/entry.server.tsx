@@ -4,7 +4,7 @@ import type { EntryContext } from "remix";
 import { WebSocketServer, WebSocket } from "ws";
 
 const wss = new WebSocketServer({
-  port: process.env.PORT ? Number(process.env.PORT) : 1234,
+  port: process.env.SOCKET_PORT ? Number(process.env.SOCKET_PORT) : 1234,
 });
 
 wss.on("connection", (ws) => {

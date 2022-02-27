@@ -7,7 +7,9 @@ import { getUserId } from "~/utls/user";
 export const loader: LoaderFunction = async ({ params }) => {
   return {
     roomId: params.roomId,
-    websocketPort: process.env.PORT ? Number(process.env.PORT) : 1234,
+    websocketPort: process.env.SOCKET_PORT
+      ? Number(process.env.SOCKET_PORT)
+      : 1234,
   };
 };
 
