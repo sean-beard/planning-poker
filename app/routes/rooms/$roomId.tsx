@@ -45,7 +45,6 @@ export default function Room() {
 
   const instantiateWebSocket = () => {
     const userId = getUserId();
-    const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(location.origin.replace(/^http/, "ws"));
 
     socket.onopen = () => {
