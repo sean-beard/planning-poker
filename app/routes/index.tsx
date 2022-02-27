@@ -6,8 +6,6 @@ export default function Index() {
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ marginBottom: "2rem" }}>EP Planning Poker</h1>
-
       <p style={{ marginBottom: "2rem" }}>
         Distributed planning poker for estimating agile projects.
       </p>
