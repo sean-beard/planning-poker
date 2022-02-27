@@ -209,7 +209,7 @@ export default function Room() {
       >
         {ESTIMATE_OPTIONS.map((estimate, i) => (
           <EstimateButton
-            key={i}
+            key={estimate}
             disabled={!isHidden}
             estimate={estimate}
             onClick={handleEstimateClick}
