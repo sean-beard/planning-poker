@@ -10,7 +10,11 @@ export function EstimateButton({
   return (
     <button
       {...{ disabled }}
-      style={{ cursor: "pointer", height: "40px", width: "50px" }}
+      style={{
+        cursor: disabled ? "not-allowed" : "pointer",
+        height: "40px",
+        width: "50px",
+      }}
       type="button"
       onClick={() => {
         onClick(estimate);

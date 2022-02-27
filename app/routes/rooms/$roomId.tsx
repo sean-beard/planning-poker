@@ -226,7 +226,13 @@ export default function Room() {
           marginBottom: "2rem",
         }}
       >
-        <PlayerEstimate {...{ estimate, isHidden }} />
+        <PlayerEstimate
+          {...{ estimate, isHidden }}
+          style={{
+            color: "white",
+            backgroundColor: `rgb(8, 126, 168, ${estimate ? 1 : 0.2})`,
+          }}
+        />
 
         {players.map((player) => (
           <PlayerEstimate
