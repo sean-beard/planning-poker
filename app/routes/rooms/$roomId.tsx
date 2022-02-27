@@ -43,8 +43,10 @@ export default function Room() {
 
   const instantiateWebSocket = () => {
     const userId = getUserId();
-    // TODO: make this dynamic
-    const socket = new WebSocket("ws://localhost:1234");
+    const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const socket = new WebSocket(
+      `${socketProtocol}://${window.location.hostname}:1234`
+    );
 
     socket.onopen = () => {
       const message = JSON.stringify({
