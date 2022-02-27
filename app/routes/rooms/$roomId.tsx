@@ -5,7 +5,10 @@ import { PlayerEstimate } from "~/components/PlayerEstimate";
 import { getUserId } from "~/utls/user";
 
 export const loader: LoaderFunction = async ({ params }) => {
-  return { roomId: params.roomId };
+  return {
+    roomId: params.roomId,
+    websocketPort: process.env.PORT ? Number(process.env.PORT) : 1234,
+  };
 };
 
 interface Player {
@@ -26,7 +29,7 @@ interface Message {
 const ESTIMATE_OPTIONS = [1, 2, 3, 5, 8];
 
 export default function Room() {
-  const { roomId } = useLoaderData();
+  const { roomId, websocketPort } = useLoaderData();
   const [estimate, setEstimate] = useState<number | null>(null);
   const [isHidden, setIsHidden] = useState(true);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -45,7 +48,7 @@ export default function Room() {
     const userId = getUserId();
     const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(
-      `${socketProtocol}://${window.location.hostname}:1234`
+      `${socketProtocol}://${window.location.hostname}:${websocketPort}`
     );
 
     socket.onopen = () => {

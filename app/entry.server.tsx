@@ -3,8 +3,9 @@ import { RemixServer } from "remix";
 import type { EntryContext } from "remix";
 import { WebSocketServer, WebSocket } from "ws";
 
-// TODO: Get port from environment variable
-const wss = new WebSocketServer({ port: 1234 });
+const wss = new WebSocketServer({
+  port: process.env.PORT ? Number(process.env.PORT) : 1234,
+});
 
 wss.on("connection", (ws) => {
   ws.on("message", (message) => {
