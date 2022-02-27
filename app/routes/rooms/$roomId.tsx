@@ -126,6 +126,8 @@ export default function Room() {
   };
 
   const addPlayer = (player: Player) => {
+    console.log(`Player ${player.id} joined`);
+
     setPlayers((players) => [...players, player]);
 
     // let the new player know that you're here
@@ -143,8 +145,6 @@ export default function Room() {
   };
 
   const updatePlayerEstimate = (player: Player, newEstimate: number) => {
-    console.log(`Player ${player.id} voted ${newEstimate}`);
-
     setPlayers((players) => {
       const index = players.indexOf(player);
       const newPlayers = [...players];
