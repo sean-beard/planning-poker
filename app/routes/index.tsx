@@ -6,12 +6,15 @@ export default function Index() {
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif" }}>
-      <h1>EP Planning Poker</h1>
+      <h1 style={{ marginBottom: "2rem" }}>EP Planning Poker</h1>
 
-      <p>Distributed planning poker for estimating agile projects.</p>
+      <p style={{ marginBottom: "2rem" }}>
+        Distributed planning poker for estimating agile projects.
+      </p>
 
       <button
         type="button"
+        style={{ height: "40px", width: "150px", cursor: "pointer" }}
         onClick={() => {
           const UUID = uuid();
 
