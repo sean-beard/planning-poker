@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LoaderFunction, useLoaderData } from "remix";
 import { EstimateButton } from "~/components/EstimateButton";
 import { PlayerEstimate } from "~/components/PlayerEstimate";
@@ -34,6 +34,11 @@ export default function Room() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [latestMessage, setLatestMessage] = useState<Message | null>(null);
   const [socket, setSocket] = useState<WebSocket>();
+
+  const atLeastOneEstimate = useMemo(
+    () => !!estimate || players.some((player) => !!player.estimate),
+    [estimate, players]
+  );
 
   useEffect(() => {
     instantiateWebSocket();
@@ -256,10 +261,11 @@ export default function Room() {
           Reset
         </button>
         <button
+          disabled={!isHidden || !atLeastOneEstimate}
           style={{
             height: "40px",
             width: "75px",
-            cursor: "pointer",
+            cursor: isHidden && atLeastOneEstimate ? "pointer" : "not-allowed",
             marginLeft: "1rem",
           }}
           onClick={handleRevealClick}
