@@ -1,4 +1,5 @@
 import { useNavigate } from "remix";
+import { v4 as uuid } from "uuid";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function Index() {
       <button
         type="button"
         onClick={() => {
-          const UUID = crypto.randomUUID();
+          const UUID = uuid();
 
           navigate(`/rooms/${UUID}`);
         }}
