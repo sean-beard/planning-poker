@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { LoaderFunction, useLoaderData } from "remix";
+import { Link, LoaderFunction, useLoaderData } from "remix";
 import { EstimateButton } from "~/components/EstimateButton";
 import { PlayerEstimate } from "~/components/PlayerEstimate";
 import { getUserId } from "~/utls/user";
@@ -199,6 +199,23 @@ export default function Room() {
 
   return (
     <div>
+      <h1 style={{ margin: "0 0 2rem 0" }}>
+        <Link
+          to="/"
+          onClick={() => {
+            const message = JSON.stringify({
+              userId: getUserId(),
+              roomId,
+              playerLeft: true,
+            });
+            socket?.send(message);
+          }}
+          style={{ textDecoration: "none", color: "rgb(8, 126, 168)" }}
+        >
+          EP Planning Poker
+        </Link>
+      </h1>
+
       <div
         style={{
           display: "flex",
