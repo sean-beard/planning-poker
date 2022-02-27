@@ -1,27 +1,6 @@
 import { renderToString } from "react-dom/server";
 import { RemixServer } from "remix";
 import type { EntryContext } from "remix";
-import { WebSocketServer, WebSocket } from "ws";
-
-const wss = new WebSocketServer({
-  port: process.env.SOCKET_PORT ? Number(process.env.SOCKET_PORT) : 1234,
-});
-
-wss.on("connection", (ws) => {
-  ws.on("message", (message) => {
-    console.log("Received message:\n\t %s", message);
-
-    wss.clients.forEach(function each(client) {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message, { binary: false });
-      }
-    });
-  });
-});
-
-wss.on("error", () => {
-  console.log("Client refreshed");
-});
 
 export default function handleRequest(
   request: Request,

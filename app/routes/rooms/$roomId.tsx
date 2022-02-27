@@ -7,9 +7,6 @@ import { getUserId } from "~/utls/user";
 export const loader: LoaderFunction = async ({ params }) => {
   return {
     roomId: params.roomId,
-    websocketPort: process.env.SOCKET_PORT
-      ? Number(process.env.SOCKET_PORT)
-      : 1234,
   };
 };
 
@@ -31,7 +28,7 @@ interface Message {
 const ESTIMATE_OPTIONS = [1, 2, 3, 5, 8];
 
 export default function Room() {
-  const { roomId, websocketPort } = useLoaderData();
+  const { roomId } = useLoaderData();
   const [estimate, setEstimate] = useState<number | null>(null);
   const [isHidden, setIsHidden] = useState(true);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -49,9 +46,7 @@ export default function Room() {
   const instantiateWebSocket = () => {
     const userId = getUserId();
     const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const socket = new WebSocket(
-      `${socketProtocol}://${window.location.hostname}:${websocketPort}`
-    );
+    const socket = new WebSocket(location.origin.replace(/^http/, "ws"));
 
     socket.onopen = () => {
       const message = JSON.stringify({
