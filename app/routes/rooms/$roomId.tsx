@@ -129,6 +129,7 @@ export default function Room() {
     if (existingPlayer) {
       if (latestMessage.playerLeft || !!latestMessage.isSpectator) {
         removePlayer(latestMessage.userId);
+        return;
       }
 
       if (!!latestMessage.estimate) {
@@ -241,7 +242,7 @@ export default function Room() {
     const message = JSON.stringify({
       userId,
       roomId,
-      estimate: null,
+      estimate,
       isHidden,
       isSpectator: newValue,
     });
