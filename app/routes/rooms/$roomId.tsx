@@ -21,6 +21,7 @@ interface Message {
   roomId: string;
   isHidden: boolean;
   estimate: number | null;
+  isSpectator: boolean;
   reset?: boolean;
   playerLeft?: boolean;
 }
@@ -34,6 +35,7 @@ export default function Room() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [latestMessage, setLatestMessage] = useState<Message | null>(null);
   const [socket, setSocket] = useState<WebSocket>();
+  const [isSpectator, setIsSpectator] = useState(false);
 
   const atLeastOneEstimate = useMemo(
     () => !!estimate || players.some((player) => !!player.estimate),
@@ -62,6 +64,7 @@ export default function Room() {
         roomId,
         estimate: null,
         isHidden: true,
+        isSpectator: false,
       });
       socket.send(message);
     };
@@ -81,6 +84,7 @@ export default function Room() {
         userId,
         roomId,
         playerLeft: true,
+        isSpectator,
       });
       socket.send(message);
     });
@@ -112,7 +116,7 @@ export default function Room() {
       (player) => player.id === latestMessage.userId
     );
 
-    if (!existingPlayer) {
+    if (!existingPlayer && !latestMessage.isSpectator) {
       addPlayer({
         id: latestMessage.userId,
         roomId: latestMessage.roomId,
@@ -122,12 +126,14 @@ export default function Room() {
       return;
     }
 
-    if (latestMessage.playerLeft) {
-      removePlayer(latestMessage.userId);
-    }
+    if (existingPlayer) {
+      if (latestMessage.playerLeft || !!latestMessage.isSpectator) {
+        removePlayer(latestMessage.userId);
+      }
 
-    if (!!latestMessage.estimate) {
-      updatePlayerEstimate(existingPlayer, latestMessage.estimate);
+      if (!!latestMessage.estimate) {
+        updatePlayerEstimate(existingPlayer, latestMessage.estimate);
+      }
     }
   };
 
@@ -138,7 +144,13 @@ export default function Room() {
 
     // let the new player know that you're here
     const userId = getUserId();
-    const message = JSON.stringify({ userId, roomId, estimate, isHidden });
+    const message = JSON.stringify({
+      userId,
+      roomId,
+      estimate,
+      isHidden,
+      isSpectator,
+    });
     socket?.send(message);
   };
 
@@ -165,6 +177,7 @@ export default function Room() {
       userId: getUserId(),
       roomId,
       playerLeft: true,
+      isSpectator,
     });
     socket?.send(message);
   };
@@ -173,7 +186,13 @@ export default function Room() {
     setEstimate(estimate);
 
     const userId = getUserId();
-    const message = JSON.stringify({ userId, roomId, estimate, isHidden });
+    const message = JSON.stringify({
+      userId,
+      roomId,
+      estimate,
+      isHidden,
+      isSpectator,
+    });
     socket?.send(message);
   };
 
@@ -186,6 +205,7 @@ export default function Room() {
       roomId,
       estimate,
       isHidden: false,
+      isSpectator,
     });
     socket?.send(message);
   };
@@ -200,6 +220,7 @@ export default function Room() {
       estimate: null,
       isHidden: true,
       reset: true,
+      isSpectator,
     });
     socket?.send(message);
   };
@@ -212,6 +233,21 @@ export default function Room() {
     });
   };
 
+  const handleSpectatorToggle = () => {
+    const newValue = !isSpectator;
+    setIsSpectator(newValue);
+
+    const userId = getUserId();
+    const message = JSON.stringify({
+      userId,
+      roomId,
+      estimate: null,
+      isHidden,
+      isSpectator: newValue,
+    });
+    socket?.send(message);
+  };
+
   return (
     <div>
       <h1 style={{ margin: "0 0 2rem 0" }}>
@@ -222,6 +258,7 @@ export default function Room() {
               userId: getUserId(),
               roomId,
               playerLeft: true,
+              isSpectator,
             });
             socket?.send(message);
           }}
@@ -249,12 +286,6 @@ export default function Room() {
         ))}
       </div>
 
-      <p style={{ marginBottom: "1rem" }}>
-        {estimate
-          ? `Your current estimate is ${estimate}`
-          : "You haven't estimated yet"}
-      </p>
-
       <div
         style={{
           display: "flex",
@@ -263,13 +294,15 @@ export default function Room() {
           marginBottom: "2rem",
         }}
       >
-        <PlayerEstimate
-          {...{ estimate, isHidden }}
-          style={{
-            color: "white",
-            backgroundColor: `rgb(8, 126, 168, ${estimate ? 1 : 0.2})`,
-          }}
-        />
+        {!isSpectator && (
+          <PlayerEstimate
+            {...{ estimate, isHidden }}
+            style={{
+              color: "white",
+              backgroundColor: `rgb(8, 126, 168, ${estimate ? 1 : 0.2})`,
+            }}
+          />
+        )}
 
         {players.map((player) => (
           <PlayerEstimate
@@ -305,6 +338,28 @@ export default function Room() {
           Reveal
         </button>
       </div>
+
+      <input
+        id="is-spectator-checkbox"
+        type="checkbox"
+        checked={!isSpectator}
+        style={{ cursor: "pointer" }}
+        onChange={handleSpectatorToggle}
+      />
+      <label
+        htmlFor="is-spectator-checkbox"
+        style={{ cursor: "pointer", marginLeft: "0.5rem" }}
+      >
+        {isSpectator ? "You are not a voter" : "You are a voter"}
+      </label>
+
+      {!isSpectator && (
+        <p style={{ marginBottom: "1rem" }}>
+          {estimate
+            ? `Your current estimate is ${estimate}`
+            : "You haven't estimated yet"}
+        </p>
+      )}
     </div>
   );
 }
