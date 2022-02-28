@@ -42,6 +42,10 @@ export default function Room() {
 
   useEffect(() => {
     instantiateWebSocket();
+
+    return () => {
+      window.removeEventListener("onhashchange", handleHashChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -80,6 +84,8 @@ export default function Room() {
       });
       socket.send(message);
     });
+
+    window.addEventListener("onhashchange", handleHashChange);
 
     setSocket(socket);
   };
@@ -152,6 +158,15 @@ export default function Room() {
 
       return newPlayers;
     });
+  };
+
+  const handleHashChange = () => {
+    const message = JSON.stringify({
+      userId: getUserId(),
+      roomId,
+      playerLeft: true,
+    });
+    socket?.send(message);
   };
 
   const handleEstimateClick = (estimate: number) => {
