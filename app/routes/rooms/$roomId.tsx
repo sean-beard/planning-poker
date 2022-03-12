@@ -36,6 +36,7 @@ export default function Room() {
   const [latestMessage, setLatestMessage] = useState<Message | null>(null);
   const [socket, setSocket] = useState<WebSocket>();
   const [isSpectator, setIsSpectator] = useState(false);
+  let pingSocketInterval: number | undefined;
 
   const atLeastOneEstimate = useMemo(
     () => !!estimate || players.some((player) => !!player.estimate),
@@ -47,6 +48,7 @@ export default function Room() {
 
     return () => {
       window.removeEventListener("onhashchange", handleHashChange);
+      window.clearInterval(pingSocketInterval);
     };
   }, []);
 
@@ -90,6 +92,20 @@ export default function Room() {
     });
 
     window.addEventListener("onhashchange", handleHashChange);
+
+    pingSocketInterval = window.setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            userId,
+            roomId,
+            estimate,
+            isHidden,
+            isSpectator,
+          })
+        );
+      }
+    }, 30000);
 
     setSocket(socket);
   };
