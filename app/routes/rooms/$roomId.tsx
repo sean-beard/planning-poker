@@ -127,6 +127,7 @@ export default function Room() {
     }
     if (!!latestMessage.reset) {
       resetState();
+      return;
     }
 
     const existingPlayer = players.find(
@@ -313,7 +314,7 @@ export default function Room() {
         {ESTIMATE_OPTIONS.map((estimate) => (
           <EstimateButton
             key={estimate}
-            disabled={!isHidden}
+            disabled={!isHidden || isSpectator}
             estimate={estimate}
             onClick={handleEstimateClick}
           />
