@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, LoaderFunction, useLoaderData } from "remix";
 import { EstimateButton } from "~/components/EstimateButton";
 import { PlayerEstimate } from "~/components/PlayerEstimate";
@@ -37,6 +37,7 @@ export default function Room() {
   const [latestMessage, setLatestMessage] = useState<Message | null>(null);
   const [socket, setSocket] = useState<WebSocket>();
   const [isSpectator, setIsSpectator] = useState(false);
+  const isSpectatorRef = useRef(false);
   let pingSocketInterval: number | undefined;
 
   const atLeastOneEstimate = useMemo(
@@ -102,7 +103,7 @@ export default function Room() {
             roomId,
             estimate,
             isHidden,
-            isSpectator,
+            isSpectator: isSpectatorRef.current,
           })
         );
       }
@@ -269,7 +270,8 @@ export default function Room() {
   };
 
   const handleSpectatorToggle = () => {
-    const newValue = !isSpectator;
+    const newValue = !isSpectatorRef.current;
+    isSpectatorRef.current = newValue;
     setIsSpectator(newValue);
 
     const userId = getUserId();
