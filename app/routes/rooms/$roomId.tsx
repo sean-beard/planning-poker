@@ -127,6 +127,7 @@ export default function Room() {
     }
     if (!!latestMessage.reset) {
       resetState();
+      return;
     }
 
     const existingPlayer = players.find(
