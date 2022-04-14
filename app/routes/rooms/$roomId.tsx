@@ -13,6 +13,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 interface Player {
   id: string;
   roomId: string;
+  isSpectator: boolean;
   estimate: number | null;
 }
 
@@ -132,21 +133,24 @@ export default function Room() {
       (player) => player.id === latestMessage.userId
     );
 
-    if (!existingPlayer && !latestMessage.isSpectator) {
+    if (!existingPlayer) {
       addPlayer({
         id: latestMessage.userId,
         roomId: latestMessage.roomId,
         estimate: latestMessage.estimate,
+        isSpectator: latestMessage.isSpectator,
       });
 
       return;
     }
 
     if (existingPlayer) {
-      if (latestMessage.playerLeft || !!latestMessage.isSpectator) {
+      if (latestMessage.playerLeft) {
         removePlayer(latestMessage.userId);
         return;
       }
+
+      updatePlayerSpectatorStatus(existingPlayer, latestMessage.isSpectator);
 
       if (!!latestMessage.estimate) {
         updatePlayerEstimate(existingPlayer, latestMessage.estimate);
@@ -176,6 +180,19 @@ export default function Room() {
 
     setPlayers((players) => {
       return [...players].filter((player) => player.id !== playerId);
+    });
+  };
+
+  const updatePlayerSpectatorStatus = (
+    player: Player,
+    isSpectator: boolean
+  ) => {
+    setPlayers((players) => {
+      const index = players.indexOf(player);
+      const newPlayers = [...players];
+      newPlayers[index].isSpectator = isSpectator;
+
+      return newPlayers;
     });
   };
 
@@ -293,7 +310,7 @@ export default function Room() {
           marginBottom: "2rem",
         }}
       >
-        {ESTIMATE_OPTIONS.map((estimate, i) => (
+        {ESTIMATE_OPTIONS.map((estimate) => (
           <EstimateButton
             key={estimate}
             disabled={!isHidden}
@@ -321,13 +338,19 @@ export default function Room() {
           />
         )}
 
-        {players.map((player) => (
-          <PlayerEstimate
-            key={player.id}
-            estimate={player.estimate}
-            {...{ isHidden }}
-          />
-        ))}
+        {players.map((player) => {
+          if (player.isSpectator) {
+            return null;
+          }
+
+          return (
+            <PlayerEstimate
+              key={player.id}
+              estimate={player.estimate}
+              {...{ isHidden }}
+            />
+          );
+        })}
       </div>
 
       <div
