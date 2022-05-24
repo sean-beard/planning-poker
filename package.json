@@ -10,7 +10,8 @@
     "dev:node": "cross-env NODE_ENV=development nodemon ./build/index.js",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "postinstall": "remix setup node",
-    "start": "cross-env NODE_ENV=production node ./build/index.js"
+    "start": "cross-env NODE_ENV=production node ./build/index.js",
+    "deploy": "fly deploy --remote-only"
   },
   "dependencies": {
     "@remix-run/react": "^1.2.2",
