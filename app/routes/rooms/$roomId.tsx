@@ -27,7 +27,7 @@ interface Message {
   playerLeft?: boolean;
 }
 
-const ESTIMATE_OPTIONS = [1, 2, 3, 5, 8];
+const ESTIMATE_OPTIONS = [1, 2, 3, 5, 8, 13, 20, 40, 100];
 
 export default function Room() {
   const { roomId } = useLoaderData();
@@ -308,8 +308,7 @@ export default function Room() {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          width: "300px",
+          flexWrap: "wrap",
           marginBottom: "2rem",
         }}
       >
