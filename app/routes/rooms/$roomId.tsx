@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, LoaderFunction, useLoaderData } from "remix";
 import { EstimateButton } from "~/components/EstimateButton";
 import { PlayerEstimate } from "~/components/PlayerEstimate";
-import { getUserId } from "~/utls/user";
+import { getUserId } from "~/utils/user";
 
 export const loader: LoaderFunction = async ({ params }) => {
   return {
@@ -27,7 +27,7 @@ interface Message {
   playerLeft?: boolean;
 }
 
-const ESTIMATE_OPTIONS = [1, 2, 3, 5, 8];
+const ESTIMATE_OPTIONS = [1, 2, 3, 5, 8, 13, 20, 40, 100];
 
 export default function Room() {
   const { roomId } = useLoaderData();
@@ -308,8 +308,7 @@ export default function Room() {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          width: "300px",
+          flexWrap: "wrap",
           marginBottom: "2rem",
         }}
       >
