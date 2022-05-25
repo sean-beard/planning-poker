@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, LoaderFunction, useLoaderData } from "remix";
 import { EstimateButton } from "~/components/EstimateButton";
 import { PlayerEstimate } from "~/components/PlayerEstimate";
-import { getUserId } from "~/utls/user";
+import { getUserId } from "~/utils/user";
 
 export const loader: LoaderFunction = async ({ params }) => {
   return {
