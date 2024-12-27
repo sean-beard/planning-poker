@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Links,
   LiveReload,
@@ -5,8 +6,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "remix";
 import type { MetaFunction } from "remix";
+import { analytics } from "./utils/analytics";
 
 export const meta: MetaFunction = () => {
   return { title: "EP Planning Poker" };
@@ -22,6 +25,12 @@ export const links = () => {
 };
 
 export default function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    analytics.trackVisit();
+  }, [location]);
+
   return (
     <html lang="en">
       <head>
